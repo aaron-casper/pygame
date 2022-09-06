@@ -11,7 +11,8 @@ sqlCreate = """CREATE TABLE IF NOT EXISTS levels (
                 north integer NOT NULL,
                 east integer NOT NULL,
                 south integer NOT NULL,
-                west integer NOT NULL
+                west integer NOT NULL,
+                 UNIQUE (mapID)
                 );"""
 cur = conn.cursor()
 cur.execute(sqlCreate)
@@ -71,11 +72,11 @@ color = (128,128,128)
 clock = pygame.time.Clock()
 conn = sqlite3.connect(database)
 cur = conn.cursor()
-nextRecord = "SELECT MapID FROM levels ORDER BY MapID DESC LIMIT 1;"
-data = cur.execute(nextRecord)
-for item in data:
-    nextRecord = int(item[0])
-    mapID = nextRecord
+levelData = maps.loadMap(mapID)
+for item in levelData:
+    x = item[0]
+    y = item[1]
+    all_walls.add(wall(x,y))
 
 while True:
     events = pygame.event.get()
@@ -175,11 +176,12 @@ while True:
                     levelData = levelData + (str(item.x) + "," + str(item.y) + "|")
                     conn = sqlite3.connect(database)
                     cur = conn.cursor()
-                sqlInsert = "INSERT INTO levels (levelData,mapID,north,east,south,west) VALUES ('" + str(levelData) + "'," + str(mapID) + "," + str(north) + "," + str(east) + "," + str(south) + "," + str(west) + ");"
-                cur.execute(sqlInsert)
-                sqlInsert = "UPDATE levels SET levelData = '" + str(levelData) + "' WHERE mapID = " + str(mapID) + ";"
-                print(sqlInsert)
-                cur.execute(sqlInsert)
+                try:
+                    sqlInsert = "INSERT INTO levels (levelData,mapID,north,east,south,west) VALUES ('" + str(levelData) + "'," + str(mapID) + "," + str(north) + "," + str(east) + "," + str(south) + "," + str(west) + ");"
+                    cur.execute(sqlInsert)
+                except:
+                    sqlInsert = "UPDATE levels SET levelData = '" + str(levelData) + "' WHERE mapID = " + str(mapID) + ";"
+                    cur.execute(sqlInsert)
                 conn.commit()
                 conn.close()
             #if event.type == pygame.MOUSEBUTTONUP:
