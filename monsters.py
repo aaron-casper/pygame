@@ -4,6 +4,7 @@ import random
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 720
 MONSTER_IMAGE = pygame.transform.scale(pygame.image.load(".\monster.png"), (15, 15))
+sight_distance = 100
 
 def calculate_new_xy(old_xy,speed,angle_in_radians):
     #print("calcXY" + str(old_xy))
@@ -12,14 +13,17 @@ def calculate_new_xy(old_xy,speed,angle_in_radians):
     return round(new_x), round(new_y)
 
 class randomMonster(pygame.sprite.Sprite):
-    def __init__(self,x,y,angle):
+    def __init__(self,x,y,angle,image):
         self.dir = 0
-        self.angle = 180
-        self.speed = 0
+        self.angle = random.randint(0,360)
+        self.speed = 0.5
         self.vel_x = 0
         self.vel_y = 0
         self.change_angle = 0
         self.health = 100
+        self.bleeding = False
+        self.image = image
+        self.attacking = False
         self.x = x 
         self.y = y
         self.decel = False
@@ -27,53 +31,11 @@ class randomMonster(pygame.sprite.Sprite):
         a = math.radians(self.dir)
         pygame.sprite.Sprite.__init__(self)
         monsterSprite = pygame.Surface([15,15], pygame.SRCALPHA)
-        self.image = pygame.transform.scale(MONSTER_IMAGE,(15,15))
+        self.image = pygame.transform.scale(self.image,(15,15))
         self.original_image = self.image
         self.rect = self.image.get_rect(center=(self.x,self.y))
-#        self.image.fill((0,255,0))
-        #shape = [(0,8), (3,0), (6,8)]
-        #pygame.draw.lines(self.image,(255,0,0),False,shape, 4)
-
         self.collision = [False] * 9
-
         
-        
-    def update(self,speed,angle):
-        #update after a move
-        self.image = pygame.transform.rotate(MONSTER_IMAGE,math.degrees(-angle))
-        #print(angle)
-        self.original_image = self.image
-        self.rect = self.image.get_rect(center=(int(self.x),int(self.y)))
-#       
-        if self.decel == True:
-            while self.speed < 0:
-                self.speed = self.speed + 0.1
-                if self.speed > 0.2:
-                    self.speed = 0
-            while self.speed > 0:
-                self.speed = self.speed - 0.1
-                if self.speed < 0.2:
-                    self.speed = 0
-        
-#completely random movement
-        self.change_angle = random.uniform(-0.25,0.25)
-        self.speed = random.uniform(-0.5,2)
-        
-        self.rect = pygame.Rect([int(self.x),int(self.y),8,8])
-        self.rect.center=calculate_new_xy(self.rect.center,int(self.speed),int(self.angle))
-        #print(str(self.x) + " - " + str(self.y))
-        self.surf = pygame.transform.rotate(self.original_image,self.angle)
-        self.rect = self.image.get_rect(center=self.rect.center)
-        self.surf = pygame.transform.rotate(self.original_image,self.angle)
-        self.rect = self.image.get_rect(center=self.rect.center)
-        self.angle += self.change_angle
-        self.change_angle = 0
-        self.angle = self.angle % 360
-        self.vel_x = speed * math.cos(angle)
-        self.vel_y = speed * math.sin(angle)
-        self.y = self.y + self.vel_y
-        self.x = self.x + self.vel_x
-        return(self.rect)
     def checkHit(self, rect):
         self.collision[0] = rect.collidepoint(self.rect.topleft)
         self.collision[1] = rect.collidepoint(self.rect.topright)
@@ -86,27 +48,78 @@ class randomMonster(pygame.sprite.Sprite):
         self.collision[7] = rect.collidepoint(self.rect.midbottom)
 
         self.collision[8] = rect.collidepoint(self.rect.center)
+        correction = 1
         if self.collision[0] or self.collision[2] or self.collision[4]:
-            self.x = self.x + 1
-            self.change_angle = random.uniform(-1.0,1.0)
+            self.x = self.x + correction
+            self.angle = self.angle - 180
         if self.collision[1] or self.collision[3] or self.collision[5]:
-            self.x = self.x - 1
-            self.change_angle = random.uniform(-1.0,1.0)
+            self.x = self.x - correction
+            self.angle = self.angle - 180
         if self.collision[0] or self.collision[1] or self.collision[6]:
-            self.y = self.y + 1
-            self.change_angle = random.uniform(-1.0,1.0)
+            self.y = self.y + correction
+            self.angle = self.angle - 180
         if self.collision[2] or self.collision[3] or self.collision[7]:
-            self.y = self.y - 1
-            self.change_angle = random.uniform(-1.0,1.0)
+            self.y = self.y - correction
+            self.angle = self.angle - 180
+
+
+        
+
+        
+        
+    def update(self,speed,angle,playerX,playerY,all_walls):
+        if self.health <= 0:
+            self.kill()
+        #get angle
+        XdistanceDelta = playerX - self.x
+        YdistanceDelta = playerY - self.y
+        #if close to player, face player
+        if abs(XdistanceDelta) < sight_distance and abs(YdistanceDelta) < sight_distance:
+            self.angle = math.atan2(YdistanceDelta, XdistanceDelta)
+            self.speed = 0.5
+        if abs(XdistanceDelta) < 10 and abs(YdistanceDelta) < 10:
+            self.angle = math.atan2(YdistanceDelta, XdistanceDelta)
+            self.speed = 0.0
+            self.attacking = True
+        #if not close, randomly wander about
+        else:
+            self.change_angle = random.randint(-3,3)
+            self.speed = 0.5
+        #collide with anything?
+        collide = pygame.sprite.spritecollideany(self,all_walls)
+        if collide:
+            self.checkHit(collide.rect)
+            self.speed = 0
+        #screen edges
+        correction = 1
         if self.x < 1:
-            self.x = 1
-            self.change_angle = random.uniform(-1.0,1.0)
+            self.x = self.x + correction
+            self.angle = self.angle - 180
+
         if self.y < 1:
-            self.y = 1
-            self.change_angle = random.uniform(-1.0,1.0)
+            self.y = self.y + correction
+            self.angle = self.angle - correction
         if self.x > SCREEN_WIDTH - 15:
-            self.x = self.x - 2
-            self.change_angle = random.uniform(-1.0,1.0)
-        if self.y > SCREEN_HEIGHT - 10:
-            self.y = self.y - 2
-            self.change_angle = random.uniform(-1.0,1.0)
+            self.x = self.x - correction
+            self.angle = self.angle - 180
+
+        if self.y > SCREEN_HEIGHT - 15:
+            self.y = self.y - correction
+            self.angle = self.angle - 180
+        #update after a move
+        self.image = pygame.transform.rotate(MONSTER_IMAGE,math.degrees(-angle))
+        self.original_image = self.image
+        self.rect = self.image.get_rect(center=(int(self.x),int(self.y)))   
+        self.rect = pygame.Rect([int(self.x),int(self.y),8,8])
+        self.rect.center=calculate_new_xy(self.rect.center,int(self.speed),int(self.angle))
+        self.surf = pygame.transform.rotate(self.original_image,self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+        self.surf = pygame.transform.rotate(self.original_image,self.angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+        self.vel_x = math.cos(self.angle) * self.speed
+        self.vel_y = math.sin(self.angle) * self.speed
+        self.y = self.y + self.vel_y
+        self.x = self.x + self.vel_x
+        return(self.rect,self.bleeding,self.attacking)
+

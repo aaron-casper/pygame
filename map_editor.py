@@ -36,7 +36,7 @@ BROWN = (128,64,0)
 BLUE = (0,0,255)
 YELLOW = (255,255,0)
 PURPLE = (255,0,255)
-gridSize = 20
+gridSize = 25
 
 class wall(pygame.sprite.Sprite):
     def __init__(self,tileposx,tileposy,tileType):

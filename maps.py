@@ -24,7 +24,7 @@ def loadMap(mapID):
                     x = int(coordPair[0])
                     y = int(coordPair[1])
                     tileType = int(coordPair[2])
-                    print(coordPair)
+                    #print(coordPair)
                     #tileType = int(coordPair[2])
                     new_walls.append((x,y,tileType))
                 

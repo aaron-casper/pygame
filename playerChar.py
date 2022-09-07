@@ -2,7 +2,9 @@ import pygame
 import math
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 720
-HERO_IMAGE = pygame.transform.scale(pygame.image.load(".\hero.png"), (15, 15))
+HERO_IMAGE = pygame.transform.scale(pygame.image.load(".\hero.png"), (16, 16))
+BIGSPLAT1 = pygame.transform.scale(pygame.image.load("bigsplat1.png"), (25, 25))
+all_bullets = pygame.sprite.Group()
 
 def calculate_new_xy(old_xy,speed,angle_in_radians):
     #print("calcXY" + str(old_xy))
@@ -12,6 +14,7 @@ def calculate_new_xy(old_xy,speed,angle_in_radians):
 
 class player(pygame.sprite.Sprite):
     def __init__(self,x,y, angle):
+        self.score = 0 
         self.dir = 0
         self.angle = 180
         self.speed = 0
@@ -19,6 +22,10 @@ class player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.change_angle = 0
         self.health = 100
+        self.firing = False
+        self.canFire = True
+        self.alive = True
+        self.weapon = 1
         self.x = x 
         self.y = y
         self.decel = False
@@ -27,7 +34,7 @@ class player(pygame.sprite.Sprite):
         a = math.radians(self.dir)
         pygame.sprite.Sprite.__init__(self)
         PlayerSprite = pygame.Surface([15,15], pygame.SRCALPHA)
-        self.image = pygame.transform.scale(HERO_IMAGE,(15,15))
+        self.image = pygame.transform.scale(HERO_IMAGE,(16,16))
         self.original_image = self.image
         self.rect = self.image.get_rect(center=(self.x,self.y))
 #        self.image.fill((0,255,0))
@@ -43,8 +50,12 @@ class player(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(HERO_IMAGE,math.degrees(-angle))
         #print(angle)
         self.original_image = self.image
+        if self.alive == False:
+            self.image = BIGSPLAT1
+            self.x = self.x
+            self.y = self.y
+            self.speed = 0
         self.rect = self.image.get_rect(center=(int(self.x),int(self.y)))
-#       
         if self.decel == True:
             while self.speed < 0:
                 self.speed = self.speed + 0.1
@@ -114,12 +125,12 @@ class player(pygame.sprite.Sprite):
         if self.collision[2] or self.collision[3] or self.collision[7]:
             self.y = self.y - correction
         if self.x < 1:
-            self.x = SCREEN_HEIGHT - 15
+            self.x = SCREEN_WIDTH - 15
             self.mapID = self.mapID - 1000
         if self.y < 1:
             self.y = SCREEN_HEIGHT - 15
             self.mapID = self.mapID + 1
-        if self.x > SCREEN_WIDTH - 15:
+        if self.x > SCREEN_WIDTH - 10:
             self.x = 1
             self.mapID = self.mapID + 1000
         if self.y > SCREEN_HEIGHT - 10:
