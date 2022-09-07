@@ -3,7 +3,7 @@ import math
 import random
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 720
-MONSTER_IMAGE = pygame.transform.scale(pygame.image.load(".\monster.png"), (15, 15))
+MONSTER_IMAGE = pygame.transform.scale(pygame.image.load("monster.png"), (15, 15))
 sight_distance = 100
 
 def calculate_new_xy(old_xy,speed,angle_in_radians):

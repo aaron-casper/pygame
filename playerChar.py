@@ -2,7 +2,7 @@ import pygame
 import math
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 720
-HERO_IMAGE = pygame.transform.scale(pygame.image.load(".\hero.png"), (16, 16))
+HERO_IMAGE = pygame.transform.scale(pygame.image.load("hero.png"), (16, 16))
 BIGSPLAT1 = pygame.transform.scale(pygame.image.load("bigsplat1.png"), (25, 25))
 all_bullets = pygame.sprite.Group()
 
