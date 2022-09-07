@@ -23,7 +23,10 @@ def loadMap(mapID):
                     coordPair = coordPair.split(',')
                     x = int(coordPair[0])
                     y = int(coordPair[1])
-                    new_walls.append((x,y))
+                    tileType = int(coordPair[2])
+                    print(coordPair)
+                    #tileType = int(coordPair[2])
+                    new_walls.append((x,y,tileType))
                 
     return(new_walls)
     #print(all_walls)

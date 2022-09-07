@@ -28,7 +28,10 @@ WHITE = (255,255,255)
 GREY = (128,128,128)
 RED = (255,0,0)
 GREEN = (0,255,0)
+BROWN = (128,64,0)
 BLUE = (0,0,255)
+YELLOW = (128,128,0)
+PURPLE = (255,0,255)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("tile_engine")
 
@@ -45,12 +48,27 @@ clock = pygame.time.Clock()
 mapID = 1
 #game classes and code
 class wall(pygame.sprite.Sprite):
-    def __init__(self,tileposx,tileposy):
+    def __init__(self,tileposx,tileposy,tileType):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface([20,20])
         self.image.fill((128,128,128))
         self.x = tileposx
         self.y = tileposy
+        self.tileType = tileType
+        if self.tileType == 1:
+            self.image.fill(GREY)
+        elif self.tileType == 2:
+            self.image.fill(GREEN)
+        elif self.tileType == 3:
+            self.image.fill(BROWN)
+        elif self.tileType == 4:
+            self.image.fill(WHITE)
+        elif self.tileType == 5:
+            self.image.fill(YELLOW)
+        elif self.tileType == 6:
+            self.image.fill(PURPLE)
+        else:
+            self.image.fill(RED)
         self.rect = pygame.Rect([self.x,self.y,20,20])        
 
 
@@ -60,15 +78,16 @@ class wall(pygame.sprite.Sprite):
 
 PlayerOne = playerChar.player(100,100,0)
 all_players.add(PlayerOne)
-randomMonster = monsters.randomMonster(500,500,0)
-all_monsters.add(randomMonster)
+#randomMonster = monsters.randomMonster(500,500,0)
+#all_monsters.add(randomMonster)
 
 
 levelData = maps.loadMap(PlayerOne.mapID)
 for item in levelData:
     x = item[0]
     y = item[1]
-    all_walls.add(wall(x,y))
+    tileType = item[2]
+    all_walls.add(wall(x,y,tileType))
 
 while True:
     if PlayerOne.mapID != mapID:
@@ -79,22 +98,23 @@ while True:
         for item in levelData:
             x = item[0]
             y = item[1]
+            tileSet = item[2]
             #print(x)
             #print(y)
-            all_walls.add(wall(x,y))
-    numText = basicfont.render(str(int(PlayerOne.x)) + ", " + str(int(PlayerOne.y)),True,GREEN)
-    numTextRect = numText.get_rect()
-    numTextRect.center = (80,20)
+            all_walls.add(wall(x,y,tileSet))
+    #numText = basicfont.render(str(int(PlayerOne.x)) + ", " + str(int(PlayerOne.y)),True,GREEN)
+    #numTextRect = numText.get_rect()
+   # numTextRect.center = (80,20)
     screen.fill((0,0,0))    
     for block in all_walls:
         PlayerOne.checkHit(block.rect)
-        randomMonster.checkHit(block.rect)
+        #randomMonster.checkHit(block.rect)
     for monster in all_monsters:
         PlayerOne.checkHit(monster.rect)
     keyinput.update(PlayerOne)
     PlayerOne.update(PlayerOne.speed,PlayerOne.angle)
-    randomMonster.update(randomMonster.speed,randomMonster.angle)
-    screen.blit(numText,numTextRect)
+    #randomMonster.update(randomMonster.speed,randomMonster.angle)
+    #screen.blit(numText,numTextRect)
     all_walls.draw(screen)
     all_monsters.draw(screen)
     all_players.draw(screen)
