@@ -17,14 +17,16 @@ import math
 #import game components
 import keyinput
 import playerChar
-import monsters 
+import monsters
 import maps
 import pellet
 
+from utils import load_image
+import configuration as C
+
 pygame.init()
 basicfont = pygame.font.SysFont(None,20)
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 720
+
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GREY = (128,128,128)
@@ -35,7 +37,7 @@ BLUE = (0,0,128)
 YELLOW = (128,128,0)
 PURPLE = (255,0,255)
 
-pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), OPENGL | DOUBLEBUF)
+pygame.display.set_mode((C.SCREEN_WIDTH, C.SCREEN_HEIGHT), OPENGL | DOUBLEBUF)
 pygame.display.set_caption("tile_engine")
 pygame.display.init()
 info = pygame.display.Info()
@@ -87,17 +89,17 @@ clock = pygame.time.Clock()
 #create offscreen surface to render to
 offscreen_surface = pygame.Surface((info.current_w, info.current_h))
 
-MONSTER_IMAGE = pygame.transform.scale(pygame.image.load("monster.png"), (20, 20))
-WATER_IMAGE = pygame.transform.scale(pygame.image.load("water.png"),(25,25))
-DIRT_IMAGE = pygame.transform.scale(pygame.image.load("dirt.png"),(25,25))
-GRASS_IMAGE = pygame.transform.scale(pygame.image.load("grass.png"),(25,25))
-STONE_IMAGE = pygame.transform.scale(pygame.image.load("stone.png"),(25,25))
-SMALLSPLAT1 = pygame.transform.scale(pygame.image.load("smallsplat1.png"), (5, 5))
-SMALLSPLAT2 = pygame.transform.scale(pygame.image.load("smallsplat2.png"), (5, 5))
-SMALLSPLAT3 = pygame.transform.scale(pygame.image.load("smallsplat3.png"), (5, 5))
-BIGSPLAT1 = pygame.transform.scale(pygame.image.load("bigsplat1.png"), (25, 25))
-BIGSPLAT2 = pygame.transform.scale(pygame.image.load("bigsplat2.png"), (25, 25))
-BIGSPLAT3 = pygame.transform.scale(pygame.image.load("bigsplat3.png"), (25, 25))
+MONSTER_IMAGE = load_image('monster.png', 20, 20)
+WATER_IMAGE = load_image('water.png', 25, 25)
+DIRT_IMAGE = load_image('dirt.png', 25, 25)
+GRASS_IMAGE = load_image('grass.png', 25, 25)
+STONE_IMAGE = load_image('stone.png', 25, 25)
+SMALLSPLAT1 = load_image('smallsplat1.png', 5, 5)
+SMALLSPLAT2 = load_image('smallsplat2.png', 5, 5)
+SMALLSPLAT3 = load_image('smallsplat3.png', 5, 5)
+BIGSPLAT1 = load_image('bigsplat1.png', 25, 25)
+BIGSPLAT2 = load_image('bigsplat2.png', 25, 25)
+BIGSPLAT3 = load_image('bigsplat3.png', 25, 25)
 playerPositionX = 250
 playerPositionY = 250
 tileposx = 0
@@ -126,7 +128,7 @@ class wall(pygame.sprite.Sprite):
             self.image = STONE_IMAGE
         else:
             self.image.fill(RED)
-        self.rect = pygame.Rect([self.x,self.y,25,25])        
+        self.rect = pygame.Rect([self.x,self.y,25,25])
 
 class terrain(pygame.sprite.Sprite):
     def __init__(self,tileposx,tileposy,tileType):
@@ -150,7 +152,7 @@ class terrain(pygame.sprite.Sprite):
             self.image = WATER_IMAGE
         else:
             self.image.fill(RED)
-        self.rect = pygame.Rect([self.x,self.y,25,25])         
+        self.rect = pygame.Rect([self.x,self.y,25,25])
 
 class splat(pygame.sprite.Sprite):
     def __init__(self,tileposx,tileposy,bigSplat):
@@ -177,9 +179,9 @@ class splat(pygame.sprite.Sprite):
                 self.image = pygame.transform.rotate(BIGSPLAT3,random.randint(0,360))
             self.x = tileposx
             self.y = tileposy
-            self.rect = pygame.Rect([self.x,self.y,25,25])            
+            self.rect = pygame.Rect([self.x,self.y,25,25])
 #create objects, player, monster, level
-            
+
 
 
 PlayerOne = playerChar.player(100,100,0)
@@ -196,7 +198,7 @@ for item in levelData:
         all_terrain.add(terrain(x,y,tileType))
     elif tileType == 1:
         all_walls.add(wall(x,y,tileType))
-    
+
 numCritters = (len(all_walls) + len(all_terrain)) / 3
 #if numCritters == 0:
 #    numCritters = 10;
@@ -205,7 +207,7 @@ while i < numCritters:
     i = i + 1
     randomMonster = monsters.randomMonster(random.randint(100,900),random.randint(100,600),0, MONSTER_IMAGE)
     all_monsters.add(randomMonster)
-    
+
 while True:
     if len(all_monsters) == 0:
         PlayerOne.score = PlayerOne.score + 1
@@ -226,7 +228,7 @@ while True:
         mouse_y = pos[1]
         #spawn shot
         #pistol
-        if PlayerOne.weapon == 1: 
+        if PlayerOne.weapon == 1:
             pew = pellet.Bullet((PlayerOne.x), (PlayerOne.y), mouse_x, mouse_y,PlayerOne.angle)
             all_bullets.add(pew)
             PlayerOne.firing = False
@@ -235,14 +237,14 @@ while True:
         if PlayerOne.weapon == 2:
             i = 0
             while i < 5:
-                i = i + 1 
+                i = i + 1
                 pew = pellet.Bullet((PlayerOne.x), (PlayerOne.y), mouse_x, mouse_y,(PlayerOne.angle + random.uniform(-0.2,0.2)))
                 all_bullets.add(pew)
                 PlayerOne.firing = False
-                
+
     if PlayerOne.mapID != mapID:
-        
-            
+
+
         mapID = PlayerOne.mapID
         levelData = maps.loadMap(PlayerOne.mapID)
         for item in all_walls:
@@ -261,7 +263,7 @@ while True:
                all_walls.add(wall(x,y,tileSet))
         for item in all_monsters:
             item.kill()
-            
+
         i = 0
         numCritters = (len(all_walls)  + len(all_terrain))/ 10
         while i < numCritters:
@@ -273,8 +275,8 @@ while True:
     numTextRect.center = (500,20)
 
     #RENDER to offscreen_surface
-    offscreen_surface.fill((0,0,0)) 
-    
+    offscreen_surface.fill((0,0,0))
+
     for block in all_walls:
         PlayerOne.checkHit(block.rect)
     for monster in all_monsters:
@@ -295,23 +297,23 @@ while True:
         PlayerOne.alive = False
     for bullet in all_bullets:
         bullet.update(all_walls,all_monsters)
-        
+
 
     PlayerOne.update(PlayerOne.speed,PlayerOne.angle)
 
-    
-    
+
+
     all_terrain.draw(offscreen_surface)
     all_splats.draw(offscreen_surface)
     all_walls.draw(offscreen_surface)
     all_monsters.draw(offscreen_surface)
     all_players.draw(offscreen_surface)
     all_bullets.draw(offscreen_surface)
-    
+
     draw_rect_alpha(offscreen_surface, (0,0,0, 64), numTextRect)
     #pygame.draw.rect(offscreen_surface,BLACK,numTextRect)
     offscreen_surface.blit(numText,numTextRect)
-    
+
  # prepare to render the texture-mapped rectangle
     glClear(GL_COLOR_BUFFER_BIT)
     glLoadIdentity()
@@ -332,5 +334,5 @@ while True:
 
     pygame.display.flip()
     clock.tick(120)
-    
+
     #PlayerOne.rect = PlayerOne.update(PlayerOne.speed,PlayerOne.angle)

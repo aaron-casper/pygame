@@ -1,9 +1,10 @@
 import pygame
 import math
 import random
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 720
-MONSTER_IMAGE = pygame.transform.scale(pygame.image.load("monster.png"), (15, 15))
+from utils import load_image
+import configuration as C
+
+MONSTER_IMAGE = load_image('monster.png', 15, 15)
 sight_distance = 100
 
 def calculate_new_xy(old_xy,speed,angle_in_radians):
@@ -24,7 +25,7 @@ class randomMonster(pygame.sprite.Sprite):
         self.bleeding = False
         self.image = image
         self.attacking = False
-        self.x = x 
+        self.x = x
         self.y = y
         self.decel = False
         self.running = False
@@ -35,7 +36,7 @@ class randomMonster(pygame.sprite.Sprite):
         self.original_image = self.image
         self.rect = self.image.get_rect(center=(self.x,self.y))
         self.collision = [False] * 9
-        
+
     def checkHit(self, rect):
         self.collision[0] = rect.collidepoint(self.rect.topleft)
         self.collision[1] = rect.collidepoint(self.rect.topright)
@@ -63,10 +64,10 @@ class randomMonster(pygame.sprite.Sprite):
             self.angle = self.angle - 180
 
 
-        
 
-        
-        
+
+
+
     def update(self,speed,angle,playerX,playerY,all_walls):
         if self.health <= 0:
             self.kill()
@@ -99,17 +100,17 @@ class randomMonster(pygame.sprite.Sprite):
         if self.y < 1:
             self.y = self.y + correction
             self.angle = self.angle - correction
-        if self.x > SCREEN_WIDTH - 15:
+        if self.x > C.SCREEN_WIDTH - 15:
             self.x = self.x - correction
             self.angle = self.angle - 180
 
-        if self.y > SCREEN_HEIGHT - 15:
+        if self.y > C.SCREEN_HEIGHT - 15:
             self.y = self.y - correction
             self.angle = self.angle - 180
         #update after a move
         self.image = pygame.transform.rotate(MONSTER_IMAGE,math.degrees(-angle))
         self.original_image = self.image
-        self.rect = self.image.get_rect(center=(int(self.x),int(self.y)))   
+        self.rect = self.image.get_rect(center=(int(self.x),int(self.y)))
         self.rect = pygame.Rect([int(self.x),int(self.y),8,8])
         self.rect.center=calculate_new_xy(self.rect.center,int(self.speed),int(self.angle))
         self.surf = pygame.transform.rotate(self.original_image,self.angle)
