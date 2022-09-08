@@ -3,6 +3,7 @@ import math
 import random
 from utils import load_image
 import configuration as C
+import ai
 
 MONSTER_IMAGE = load_image('monster.png', 15, 15)
 sight_distance = 100
@@ -37,60 +38,23 @@ class randomMonster(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(self.x,self.y))
         self.collision = [False] * 9
 
-    def checkHit(self, rect):
-        self.collision[0] = rect.collidepoint(self.rect.topleft)
-        self.collision[1] = rect.collidepoint(self.rect.topright)
-        self.collision[2] = rect.collidepoint(self.rect.bottomleft)
-        self.collision[3] = rect.collidepoint(self.rect.bottomright)
-
-        self.collision[4] = rect.collidepoint(self.rect.midleft)
-        self.collision[5] = rect.collidepoint(self.rect.midright)
-        self.collision[6] = rect.collidepoint(self.rect.midtop)
-        self.collision[7] = rect.collidepoint(self.rect.midbottom)
-
-        self.collision[8] = rect.collidepoint(self.rect.center)
-        correction = 1
-        if self.collision[0] or self.collision[2] or self.collision[4]:
-            self.x = self.x + correction
-            self.angle = self.angle - 180
-        if self.collision[1] or self.collision[3] or self.collision[5]:
-            self.x = self.x - correction
-            self.angle = self.angle - 180
-        if self.collision[0] or self.collision[1] or self.collision[6]:
-            self.y = self.y + correction
-            self.angle = self.angle - 180
-        if self.collision[2] or self.collision[3] or self.collision[7]:
-            self.y = self.y - correction
-            self.angle = self.angle - 180
-
-
-
-
-
-
-    def update(self,speed,angle,playerX,playerY,all_walls):
+    def update(self,speed,angle,player,all_walls):
         if self.health <= 0:
             self.kill()
-        #get angle
-        XdistanceDelta = playerX - self.x
-        YdistanceDelta = playerY - self.y
-        #if close to player, face player
-        if abs(XdistanceDelta) < sight_distance and abs(YdistanceDelta) < sight_distance:
-            self.angle = math.atan2(YdistanceDelta, XdistanceDelta)
-            self.speed = 0.5
-        if abs(XdistanceDelta) < 10 and abs(YdistanceDelta) < 10:
-            self.angle = math.atan2(YdistanceDelta, XdistanceDelta)
-            self.speed = 0.0
+        xdiff = player.x - self.x
+        ydiff = player.y - self.y
+        if (abs(xdiff) < 10) and (abs(ydiff) < 10) and (player.health > 0):
             self.attacking = True
-        #if not close, randomly wander about
-        else:
-            self.change_angle = random.randint(-3,3)
-            self.speed = 0.5
+        if (abs(xdiff) > 10) or (abs(ydiff) > 10) or (player.health < 1):
+            self.attacking = False
+        #get angle
+        ai.facePlayer(self,player,all_walls)
+        ai.moveToGoal(self,player,all_walls)
         #collide with anything?
         collide = pygame.sprite.spritecollideany(self,all_walls)
-        if collide:
-            self.checkHit(collide.rect)
-            self.speed = 0
+        if collide: 
+            ai.bumpWall(self,collide)
+            self.angle = self.angle + self.change_angle
         #screen edges
         correction = 1
         if self.x < 1:
@@ -99,7 +63,7 @@ class randomMonster(pygame.sprite.Sprite):
 
         if self.y < 1:
             self.y = self.y + correction
-            self.angle = self.angle - correction
+            self.angle = self.angle - 180
         if self.x > C.SCREEN_WIDTH - 15:
             self.x = self.x - correction
             self.angle = self.angle - 180
@@ -122,5 +86,5 @@ class randomMonster(pygame.sprite.Sprite):
         self.vel_y = math.sin(self.angle) * self.speed
         self.y = self.y + self.vel_y
         self.x = self.x + self.vel_x
-        return(self.rect,self.bleeding,self.attacking)
+        return(self)
 

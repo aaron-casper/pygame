@@ -34,9 +34,9 @@ def update(player):
                 if event.button == 1:
                     self.running = True
                 if event.button == 4:
-                    self.weapon = 1
+                    self.weapon -= 1
                 if event.button == 5:
-                    self.weapon = 2
+                    self.weapon += 1
                 if event.button == 0:
                     if self.canFire == True:
                         self.firing = True
@@ -45,8 +45,10 @@ def update(player):
             if event.type == pygame.JOYBUTTONUP:
                 if event.button == 0:
                     self.canFire == True
+                    self.firing = False
                 if event.button == 1:
                     self.running = False
+                    
         
     
         #print(xAxis)
@@ -73,6 +75,8 @@ def update(player):
             self.weapon = 1
         if pressed[pygame.K_2]:
             self.weapon = 2
+        if pressed[pygame.K_3]:
+            self.weapon = 3
 
         
         
