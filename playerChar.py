@@ -1,9 +1,9 @@
-import pygame
-import math
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 720
-HERO_IMAGE = pygame.transform.scale(pygame.image.load("hero.png"), (16, 16))
-BIGSPLAT1 = pygame.transform.scale(pygame.image.load("bigsplat1.png"), (25, 25))
+import pygame, math
+import configuration as C
+from utils import load_image
+
+HERO_IMAGE = load_image('hero.png', 16, 16)
+BIGSPLAT1 = load_image('bigsplat1.png', 25, 25)
 all_bullets = pygame.sprite.Group()
 
 def calculate_new_xy(old_xy,speed,angle_in_radians):
@@ -14,7 +14,7 @@ def calculate_new_xy(old_xy,speed,angle_in_radians):
 
 class player(pygame.sprite.Sprite):
     def __init__(self,x,y, angle):
-        self.score = 0 
+        self.score = 0
         self.dir = 0
         self.angle = 180
         self.speed = 0
@@ -26,7 +26,7 @@ class player(pygame.sprite.Sprite):
         self.canFire = True
         self.alive = True
         self.weapon = 1
-        self.x = x 
+        self.x = x
         self.y = y
         self.decel = False
         self.running = False
@@ -43,8 +43,8 @@ class player(pygame.sprite.Sprite):
 
         self.collision = [False] * 9
 
-        
-        
+
+
     def update(self,speed,angle):
         #update after a move
         self.image = pygame.transform.rotate(HERO_IMAGE,math.degrees(-angle))
@@ -65,8 +65,8 @@ class player(pygame.sprite.Sprite):
                 self.speed = self.speed - 0.1
                 if self.speed < 0.2:
                     self.speed = 0
-            
-                    
+
+
         self.rect = pygame.Rect([int(self.x),int(self.y),8,8])
         self.rect.center=calculate_new_xy(self.rect.center,int(self.speed),int(self.angle))
         #print(str(self.x) + " - " + str(self.y))
@@ -125,15 +125,15 @@ class player(pygame.sprite.Sprite):
         if self.collision[2] or self.collision[3] or self.collision[7]:
             self.y = self.y - correction
         if self.x < 1:
-            self.x = SCREEN_WIDTH - 15
+            self.x = C.SCREEN_WIDTH - 15
             self.mapID = self.mapID - 1000
         if self.y < 1:
-            self.y = SCREEN_HEIGHT - 15
+            self.y = C.SCREEN_HEIGHT - 15
             self.mapID = self.mapID + 1
-        if self.x > SCREEN_WIDTH - 10:
+        if self.x > C.SCREEN_WIDTH - 10:
             self.x = 1
             self.mapID = self.mapID + 1000
-        if self.y > SCREEN_HEIGHT - 10:
+        if self.y > C.SCREEN_HEIGHT - 10:
             self.y = 1
             self.mapID = self.mapID - 1
-        
+
