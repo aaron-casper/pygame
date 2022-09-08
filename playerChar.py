@@ -31,6 +31,9 @@ class player(pygame.sprite.Sprite):
         self.decel = False
         self.running = False
         self.mapID = 1
+        self.ammo_pb = 100
+        self.ammo_sh = 20
+        self.ammo_mg = 100
         a = math.radians(self.dir)
         pygame.sprite.Sprite.__init__(self)
         PlayerSprite = pygame.Surface([15,15], pygame.SRCALPHA)
@@ -124,6 +127,8 @@ class player(pygame.sprite.Sprite):
 
         if self.collision[2] or self.collision[3] or self.collision[7]:
             self.y = self.y - correction
+            
+    def checkMap(self):
         if self.x < 1:
             self.x = C.SCREEN_WIDTH - 15
             self.mapID = self.mapID - 1000

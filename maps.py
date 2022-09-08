@@ -1,5 +1,5 @@
 import sqlite3
-database = "./maps.db"
+database = "maps.db"
 conn = sqlite3.connect(database)
 
 def loadMap(mapID):
@@ -21,12 +21,13 @@ def loadMap(mapID):
  #               print(detail)
                 for coordPair in detail:
                     coordPair = coordPair.split(',')
-                    x = int(coordPair[0])
-                    y = int(coordPair[1])
-                    tileType = int(coordPair[2])
-                    #print(coordPair)
-                    #tileType = int(coordPair[2])
-                    new_walls.append((x,y,tileType))
+                    if coordPair:
+                        x = int(coordPair[0])
+                        y = int(coordPair[1])
+                        tileType = int(coordPair[2])
+                        #print(coordPair)
+                        #tileType = int(coordPair[2])
+                        new_walls.append((x,y,tileType))
                 
     return(new_walls)
     #print(all_walls)

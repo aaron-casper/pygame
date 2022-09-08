@@ -2,6 +2,9 @@ import sys
 import pygame
 import sqlite3
 import maps
+from utils import load_image
+import configuration as C
+
 database = "./maps.db"
 conn = sqlite3.connect(database)
 sqlCreate = """CREATE TABLE IF NOT EXISTS levels (
@@ -19,9 +22,12 @@ cur.execute(sqlCreate)
 
 pygame.init()
 
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 720
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+WATER_IMAGE = load_image('water.png', 25, 25)
+DIRT_IMAGE = load_image('dirt.png', 25, 25)
+GRASS_IMAGE = load_image('grass.png', 25, 25)
+STONE_IMAGE = load_image('stone.png', 25, 25)
+
+screen = pygame.display.set_mode((C.SCREEN_WIDTH, C.SCREEN_HEIGHT))
 pygame.display.set_caption("map_editor")
 basicfont = pygame.font.SysFont(None,20)
 pygame.mouse.set_visible(False)
@@ -44,17 +50,17 @@ class wall(pygame.sprite.Sprite):
         self.image = pygame.Surface([gridSize,gridSize])
         self.tileType = tileType
         if self.tileType == 1:
-            self.image.fill(GREY)
+            self.image = STONE_IMAGE
         elif self.tileType == 2:
-            self.image.fill(GREEN)
+            self.image = GRASS_IMAGE
         elif self.tileType == 3:
-            self.image.fill(BROWN)
+            self.image = DIRT_IMAGE
         elif self.tileType == 4:
             self.image.fill(WHITE)
         elif self.tileType == 5:
             self.image.fill(YELLOW)
         elif self.tileType == 6:
-            self.image.fill(PURPLE)
+            self.image = WATER_IMAGE
         else:
             self.image.fill(RED)
         self.x = tileposx
@@ -75,9 +81,19 @@ def makeGrid(surface, width, height, spacing):
         pygame.draw.line(surface, WHITE, (0,y), (width, y))
         
 def snapToGrid(mousePos):
-    if 0 < mousePos[0] < SCREEN_WIDTH and 0 < mousePos[1] < SCREEN_HEIGHT:
+    if 0 < mousePos[0] < C.SCREEN_WIDTH and 0 < mousePos[1] < C.SCREEN_HEIGHT:
         return roundCoords(mousePos[0],mousePos[1])
-        
+
+def fillNewMap():
+    print("filling blank map with grass")
+    x = 0
+    while x < 976:
+        y = 0
+        while y < 701:
+            pos = (x, y)
+            all_walls.add(wall(x,y,2))
+            y = y + gridSize
+        x = x + gridSize
 
 def getGroup():
 #todo: read x/y coordinates from database
@@ -85,6 +101,7 @@ def getGroup():
 #todo: link player boundary with nextmap
     #wall(150,150)
     return(all_walls)
+
 mapID = 1
 getGroup()
 color = (128,128,128)
@@ -93,6 +110,9 @@ conn = sqlite3.connect(database)
 cur = conn.cursor()
 levelData = maps.loadMap(mapID)
 tileType = 1
+if len(levelData) < 1 :
+    fillNewMap()
+    
 for item in levelData:
     x = item[0]
     y = item[1]
@@ -113,6 +133,8 @@ while True:
                 for item in all_walls:
                     item.kill()
                 levelData = maps.loadMap(mapID)
+                if len(levelData) < 1 :
+                    fillNewMap()
                 for item in levelData:
                     x = item[0]
                     y = item[1]
@@ -125,6 +147,8 @@ while True:
                 for item in all_walls:
                     item.kill()
                 levelData = maps.loadMap(mapID)
+                if len(levelData) < 1 :
+                    fillNewMap()
                 for item in levelData:
                     x = item[0]
                     y = item[1]
@@ -137,6 +161,8 @@ while True:
                 for item in all_walls:
                     item.kill()
                 levelData = maps.loadMap(mapID)
+                if len(levelData) < 1 :
+                    fillNewMap()
                 for item in levelData:
                     x = item[0]
                     y = item[1]
@@ -149,6 +175,8 @@ while True:
                 for item in all_walls:
                     item.kill()
                 levelData = maps.loadMap(mapID)
+                if len(levelData) < 1 :
+                    fillNewMap()
                 for item in levelData:
                     x = item[0]
                     y = item[1]
@@ -166,7 +194,8 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             #print(str(event.button) + " DOWN")
             if event.button == 1:
-                wall(snap_coord[0],snap_coord[1],tileType)                        
+                wall(snap_coord[0],snap_coord[1],tileType)
+                print(str(snap_coord[0]) + ", " + str(snap_coord[1]))
             if event.button == 3:
                 for item in all_walls:
                     if item.x == snap_coord[0] and item.y == snap_coord[1]:
@@ -214,28 +243,28 @@ while True:
      #   mapID = mapID + 1
 
 
-    numText = basicfont.render("tileType: " + str(tileType),True,GREEN)
+    numText = basicfont.render("tileType: " + str(tileType),True,DARKRED)
     numTextRect = numText.get_rect()
     numTextRect.center = (30,20)
     
-    Ntext = basicfont.render(str(north),True,GREEN)
+    Ntext = basicfont.render(str(north),True,DARKRED)
     NtextRect = Ntext.get_rect()
-    NtextRect.center = ((SCREEN_WIDTH/2),20)
+    NtextRect.center = ((C.SCREEN_WIDTH/2),20)
 
-    Etext = basicfont.render(str(east),True,GREEN)
+    Etext = basicfont.render(str(east),True,DARKRED)
     EtextRect = Etext.get_rect()
-    EtextRect.center = ((SCREEN_WIDTH-20),(SCREEN_HEIGHT/2))
+    EtextRect.center = ((C.SCREEN_WIDTH-20),(C.SCREEN_HEIGHT/2))
 
-    Stext = basicfont.render(str(south),True,GREEN)
+    Stext = basicfont.render(str(south),True,DARKRED)
     StextRect = Stext.get_rect()
-    StextRect.center = ((SCREEN_WIDTH/2),(SCREEN_HEIGHT-20))
+    StextRect.center = ((C.SCREEN_WIDTH/2),(C.SCREEN_HEIGHT-20))
 
-    Wtext = basicfont.render(str(west),True,GREEN)
+    Wtext = basicfont.render(str(west),True,DARKRED)
     WtextRect = Wtext.get_rect()
-    WtextRect.center = (20,(SCREEN_HEIGHT/2))
+    WtextRect.center = (20,(C.SCREEN_HEIGHT/2))
 
     screen.fill((0,0,0))
-    makeGrid(screen,SCREEN_WIDTH,SCREEN_HEIGHT,gridSize)
+    makeGrid(screen,C.SCREEN_WIDTH,C.SCREEN_HEIGHT,gridSize)
 
     all_walls.draw(screen)
     screen.blit(Ntext,NtextRect)
