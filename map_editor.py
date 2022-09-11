@@ -4,7 +4,8 @@ import sqlite3
 import maps
 from utils import load_image
 import configuration as C
-
+import numpy as np
+import time
 database = "./maps.db"
 conn = sqlite3.connect(database)
 sqlCreate = """CREATE TABLE IF NOT EXISTS levels (
@@ -19,19 +20,29 @@ sqlCreate = """CREATE TABLE IF NOT EXISTS levels (
                 );"""
 cur = conn.cursor()
 cur.execute(sqlCreate)
-
+sqlCreate = """CREATE TABLE IF NOT EXISTS nodeGraphs (
+                id integer PRIMARY KEY,
+                mapID interger NOT NULL,
+                nodeGraph blob NOT NULL,
+                UNIQUE (mapID)
+                );"""
+cur = conn.cursor()
+cur.execute(sqlCreate)
 pygame.init()
 
 WATER_IMAGE = load_image('water.png', 25, 25)
 DIRT_IMAGE = load_image('dirt.png', 25, 25)
 GRASS_IMAGE = load_image('grass.png', 25, 25)
 STONE_IMAGE = load_image('stone.png', 25, 25)
-
+TILEFLOOR_IMAGE = load_image('tilefloor.png',25,25)
+ROCKYGROUND_IMAGE = load_image('rockyground.png',25,25)
+NOTEXTURE_IMAGE = load_image('notexture.png',25,25)
 screen = pygame.display.set_mode((C.SCREEN_WIDTH, C.SCREEN_HEIGHT))
 pygame.display.set_caption("map_editor")
-basicfont = pygame.font.SysFont(None,20)
+basicfont = pygame.font.Font('assets/open24.ttf',20)
 pygame.mouse.set_visible(False)
 all_walls = pygame.sprite.Group()
+all_cursors = pygame.sprite.Group()
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GREY = (128,128,128)
@@ -44,6 +55,7 @@ YELLOW = (255,255,0)
 PURPLE = (255,0,255)
 gridSize = 25
 
+        
 class wall(pygame.sprite.Sprite):
     def __init__(self,tileposx,tileposy,tileType):
         pygame.sprite.Sprite.__init__(self)
@@ -56,9 +68,9 @@ class wall(pygame.sprite.Sprite):
         elif self.tileType == 3:
             self.image = DIRT_IMAGE
         elif self.tileType == 4:
-            self.image.fill(WHITE)
+            self.image = TILEFLOOR_IMAGE
         elif self.tileType == 5:
-            self.image.fill(YELLOW)
+            self.image = ROCKYGROUND_IMAGE
         elif self.tileType == 6:
             self.image = WATER_IMAGE
         else:
@@ -85,7 +97,7 @@ def snapToGrid(mousePos):
         return roundCoords(mousePos[0],mousePos[1])
 
 def fillNewMap():
-    print("filling blank map with grass")
+    #print("filling blank map with grass")
     x = 0
     while x < 976:
         y = 0
@@ -102,6 +114,11 @@ def getGroup():
     #wall(150,150)
     return(all_walls)
 
+def clearArray(arrayToClear):
+    for index in range(len(arrayToClear)):
+        del arrayToClear[0]
+        
+
 mapID = 1
 getGroup()
 color = (128,128,128)
@@ -110,6 +127,15 @@ conn = sqlite3.connect(database)
 cur = conn.cursor()
 levelData = maps.loadMap(mapID)
 tileType = 1
+pos = pygame.mouse.get_pos()
+mouse_x = pos[0]
+mouse_y = pos[1]
+snap_coord = snapToGrid(pos)
+if snap_coord != None:
+    mouse_x = snap_coord[0] + 10
+    mouse_y = snap_coord[1] + 10
+
+
 if len(levelData) < 1 :
     fillNewMap()
     
@@ -119,6 +145,10 @@ for item in levelData:
     tileType = item[2]
     all_walls.add(wall(x,y,tileType))
 
+aiWalls = []
+aiNodes = []
+aiWallNodes = []
+xNodes = []
 while True:
     events = pygame.event.get()
     north = mapID  + 1
@@ -202,26 +232,72 @@ while True:
                         item.kill()
             if event.button == 4:
                 tileType = tileType - 1
-                if tileType < 1:
-                    tileType = 1
             if event.button == 5:
                 tileType = tileType + 1
+            if tileType > 6:
+                tileType = 1
+            if tileType < 1:
+                tileType = 6
             if event.button == 2:
                 levelData = ""
+
+                print("building nodegraph")
                 for item in all_walls:
+                    if item.tileType == 1:
+                        x = int(item.x)
+                        y = int(item.y)
+                        aiWalls.append((x,y))
+                    #print(aiWalls)
                     levelData = levelData + (str(item.x) + "," + str(item.y) + "," + str(item.tileType) + "|")
                     conn = sqlite3.connect(database)
                     cur = conn.cursor()
+                print("wall objects identified")
                 try:
                     sqlInsert = "INSERT INTO levels (levelData,mapID,north,east,south,west) VALUES ('" + str(levelData) + "'," + str(mapID) + "," + str(north) + "," + str(east) + "," + str(south) + "," + str(west) + ");"
                     cur.execute(sqlInsert)
+                    print("level data written to db")
                 except:
                     sqlInsert = "UPDATE levels SET levelData = '" + str(levelData) + "' WHERE mapID = " + str(mapID) + ";"
                     cur.execute(sqlInsert)
+                    print("level data updated in db")
                 conn.commit()
+                print("compiling nodegraph from wall objects")
+                #print(aiWalls)
+                wallTable = ""
+                tileX = 0
+                tileY = 0
+                row = ""
+                tableSizeX = C.SCREEN_WIDTH
+                tableSizeY = C.SCREEN_HEIGHT
+                while tileY < tableSizeY:
+                    tileX = 0
+                    while tileX < tableSizeX:
+                        pos = (tileX,tileY)
+                        for node in aiWalls:
+                            if node[0] == pos[0] and node[1] == pos[1]:
+                                print("wall found @ " + str(pos))
+                                row += "0,"
+                                break
+                        else:
+                            row = row + "1,"
+                        tileX = tileX + 25
+                    tileY = tileY + 25
+                    row = row + "|"
+                    wallTable = wallTable + row 
+                    row = ""
                 
-            #if event.type == pygame.MOUSEBUTTONUP:
-            #print(str(event.button) + " UP") 
+                try:
+                    sqlInsert = "INSERT INTO nodeGraphs (nodeGraph,mapID) VALUES ('" + str(wallTable) + "'," + str(mapID) + ");"
+                    cur.execute(sqlInsert)
+                    print("nodegraph data written to db")
+                except:
+                    sqlInsert = "UPDATE nodeGraphs SET nodeGraph = '" + str(wallTable) + "' WHERE mapID = " + str(mapID) + ";"
+                    #print(sqlInsert)
+                    cur.execute(sqlInsert)
+                    print("nodegraph data updated in db")
+                conn.commit()
+
+                
     pygame.event.pump()
     pressed = pygame.key.get_pressed()
     if pressed[pygame.K_ESCAPE]:
@@ -230,22 +306,11 @@ while True:
         pygame.quit()
         quit()
         sys.quit()
-  #  if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
-  #      mapID = mapID + 1000
-            
-  #  if pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
-  #      mapID = mapID -1
-            
-  #  if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
-   #     mapID = mapID - 1000
-            
-    #if pressed[pygame.K_UP] or pressed[pygame.K_w]:
-     #   mapID = mapID + 1
 
 
     numText = basicfont.render("tileType: " + str(tileType),True,DARKRED)
     numTextRect = numText.get_rect()
-    numTextRect.center = (30,20)
+    numTextRect.center = (50,20)
     
     Ntext = basicfont.render(str(north),True,DARKRED)
     NtextRect = Ntext.get_rect()
@@ -272,22 +337,32 @@ while True:
     screen.blit(Stext,StextRect)
     screen.blit(Wtext,WtextRect)
     screen.blit(numText,numTextRect)
+    pos = pygame.mouse.get_pos()
+    mouse_x = pos[0]
+    mouse_y = pos[1]
+    snap_coord = snapToGrid(pos)
+    if snap_coord != None:
+        mouse_x = snap_coord[0] + 10
+        mouse_y = snap_coord[1] + 10
+        mouseRect = (mouse_x-11,mouse_y-11,mouse_x + 13,mouse_y + 13)
     if tileType == 1:
-        pygame.draw.circle(screen,GREY,[mouse_x,mouse_y],10,0)
+        screen.blit(STONE_IMAGE,mouseRect)
     elif tileType == 2:
-        pygame.draw.circle(screen,GREEN,[mouse_x,mouse_y],10,0)
+        screen.blit(GRASS_IMAGE,mouseRect)
     elif tileType == 3:
-        pygame.draw.circle(screen,BROWN,[mouse_x,mouse_y],10,0)
+        screen.blit(DIRT_IMAGE,mouseRect)
     elif tileType == 4:
-        pygame.draw.circle(screen,WHITE,[mouse_x,mouse_y],10,0)
+        screen.blit(TILEFLOOR_IMAGE,mouseRect)
     elif tileType == 5:
-        pygame.draw.circle(screen,YELLOW,[mouse_x,mouse_y],10,0)
+        screen.blit(ROCKYGROUND_IMAGE,mouseRect)
     elif tileType == 6:
-        pygame.draw.circle(screen,PURPLE,[mouse_x,mouse_y],10,0)
+        screen.blit(WATER_IMAGE,mouseRect)
     else:
-        pygame.draw.circle(screen,RED,[mouse_x,mouse_y],10,0)
-        if tileType > 7:
-            tileType = 7
-    pygame.draw.circle(screen,DARKRED,[mouse_x,mouse_y],10,1)
+        screen.blit(NOTEXTURE_IMAGE,mouseRect)
+
+
+    pygame.draw.circle(screen,DARKRED,[mouse_x+1,mouse_y+1],12,1)
+    
+    all_cursors.draw(screen)
     pygame.display.flip()
     clock.tick(60)

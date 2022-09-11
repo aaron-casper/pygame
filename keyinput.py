@@ -2,15 +2,18 @@
 import pygame
 import sys
 pygame.joystick.init()
-joystick = pygame.joystick.Joystick(0)
 joystick_count = pygame.joystick.get_count()
 xAxis = 0
 yAxis = 0
 
-for i in range(joystick_count):
-    joystick = pygame.joystick.Joystick(i)
-    joystick.init()
-    axes = joystick.get_numaxes()
+if joystick_count == 0:
+    joystick = None
+else:
+    for i in range(joystick_count):
+        joystick = pygame.joystick.Joystick(i)
+        joystick.init()
+        axes = joystick.get_numaxes()
+
     
 def update(player):
     self = player
@@ -99,14 +102,14 @@ def update(player):
 
         if not pressed[pygame.K_DOWN]:
             self.decel = True
-
-        Xaxis = joystick.get_axis(0)
-        Yaxis = joystick.get_axis(1)
-        self.change_angle = (Xaxis * 0.1)
-        if self.running == True:
-            self.speed = (Yaxis * -1) + 1
-        else:
-            self.speed = Yaxis * -1
+        if joystick != None:
+            Xaxis = joystick.get_axis(0)
+            Yaxis = joystick.get_axis(1)
+            self.change_angle = (Xaxis * 0.1)
+            if self.running == True:
+                self.speed = (Yaxis * -1) + 1
+            else:
+                self.speed = Yaxis * -1
 
         if pressed[pygame.K_ESCAPE]:
             print("escape! escape! or something")
@@ -120,7 +123,7 @@ def update(player):
         if pressed[pygame.K_ESCAPE]:
             print("escape! escape! or something")
             pygame.quit()
-            quit()
+            #quit()
             sys.quit()
 
 

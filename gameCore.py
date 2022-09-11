@@ -36,7 +36,7 @@ display = pygame.display.set_mode((C.SCREEN_WIDTH, C.SCREEN_HEIGHT))#, FULLSCREE
 pygame.display.set_caption("splatter!")
 pygame.display.init()
 info = pygame.display.Info()
-pygame.mouse.set_visible(False) 
+pygame.mouse.set_visible(True) 
 
 
 #func to draw alpha'd rectangle
@@ -55,6 +55,9 @@ WATER_IMAGE = load_image('water.png', 25, 25)
 DIRT_IMAGE = load_image('dirt.png', 25, 25)
 GRASS_IMAGE = load_image('grass.png', 25, 25)
 STONE_IMAGE = load_image('stone.png', 25, 25)
+TILEFLOOR_IMAGE = load_image('tilefloor.png',25,25)
+ROCKYGROUND_IMAGE = load_image('rockyground.png',25,25)
+NOTEXTURE_IMAGE = load_image('notexture.png',25,25)
 MONSTER_IMAGE = load_image('monster.png', 20, 20)
 print("loaded sprites")
 tileposx = 0
@@ -107,13 +110,13 @@ class terrain(pygame.sprite.Sprite):
         elif self.tileType == 3:
             self.image = DIRT_IMAGE
         elif self.tileType == 4:
-            self.image.fill(C.WHITE)
+            self.image = TILEFLOOR_IMAGE
         elif self.tileType == 5:
-            self.image.fill(C.YELLOW)
+            self.image = ROCKYGROUND_IMAGE
         elif self.tileType == 6:
             self.image = WATER_IMAGE
         else:
-            self.image.fill(C.RED)
+            self.image = NOTEXTURE_IMAGE
         self.rect = pygame.Rect([self.x,self.y,25,25])
 
 
@@ -155,7 +158,7 @@ def addMonsters(numMonsters, mapID):
         randomMonster = monsters.randomMonster(random.randint(100,900),random.randint(100,600),0, MONSTER_IMAGE,mapID)
         all_monsters.add(randomMonster)
 
-def gameLoop(){
+def gameLoop(mapID):
 
     #spawn the player
     PlayerOne = playerChar.player(C.playerStartPositionX,C.playerStartPositionY,0)
@@ -168,8 +171,8 @@ def gameLoop(){
         if len(all_monsters) == 0:
             PlayerOne.score = PlayerOne.score + 1
             #PlayerOne.health = 100
-            addMonsters(PlayerOne.score * 3, mapID)
-            #addMonsters(1, mapID)
+            #addMonsters(PlayerOne.score * 3, mapID)
+            addMonsters(1, mapID)
         #get key input
         keyinput.update(PlayerOne)
 
@@ -181,8 +184,8 @@ def gameLoop(){
         if PlayerOne.mapID != mapID:
             mapID = PlayerOne.mapID
             levelChange(mapID)
-            #addMonsters(1, mapID)
-            addMonsters(PlayerOne.score * 3, mapID)
+            addMonsters(1, mapID)
+            #addMonsters(PlayerOne.score * 3, mapID)
         
         numText = basicfont.render(str(int(PlayerOne.health)) + " hp | BUL: " + str(PlayerOne.ammo_pb) + " | SHL: " + str(PlayerOne.ammo_sh) + " | MG: " + str(PlayerOne.ammo_mg) + " | Weapon: " + str(PlayerOne.weapon) + " | Score: " + str(PlayerOne.score),True,C.WHITE)
         numTextRect = numText.get_rect()
@@ -194,44 +197,30 @@ def gameLoop(){
 
         #update monsters/ai
         for monster in all_monsters:
-            monster.update(0.5,monster.angle,PlayerOne,monster.nodeGraph,all_splats,all_goodies,mapID,all_walls)
+            monster.update(0.5,monster.angle,all_players,PlayerOne,monster.nodeGraph,all_splats,all_goodies,mapID,all_walls)
             PlayerOne.checkHit(monster.rect)
 
         #check player vars - should be moved to PlayerChar.py
-        if PlayerOne.health >= 100:
-            PlayerOne.health = 100
-        if PlayerOne.ammo_mg >= 50:
-            PlayerOne.ammo_mg = 50
-        if PlayerOne.ammo_sh >= 25:
-            PlayerOne.ammo_sh = 25
-        if PlayerOne.ammo_pb >= 15:
-            PlayerOne.ammo_pb = 15
-    
-        if PlayerOne.health <= 0:
-            for item in all_monsters:
-                item.kill()
-            PlayerOne.health = 100
-            PlayerOne.score = PlayerOne.score - 1
-            PlayerOne.ammo_pb = 15
-            levelChange(1)
+
         
         for bullet in all_bullets:
             bullet.update(all_walls,all_monsters)
-
-        collide = pygame.sprite.spritecollideany(PlayerOne,all_goodies)
-        if collide:
-            if collide.type == 0:
-                PlayerOne.health = PlayerOne.health + 20
-            if collide.type == 1:
-                PlayerOne.ammo_pb = PlayerOne.ammo_pb + 30
-            if collide.type == 2:
-                PlayerOne.ammo_sh = PlayerOne.ammo_sh + 25
-            if collide.type == 3:
-                PlayerOne.ammo_mg = PlayerOne.ammo_mg + 50
-            collide.kill()
-    
-        PlayerOne.update(PlayerOne.speed,PlayerOne.angle)
-
+        #player died, reset and restart at map 1
+        PlayerOne.update(PlayerOne.speed,PlayerOne.angle,all_goodies,all_monsters)
+        if PlayerOne.health <= 0:
+            for item in all_monsters:
+                item.kill()
+            for item in all_goodies:
+                item.kill()
+            levelChange(1)
+            PlayerOne.health = 100
+            PlayerOne.score = PlayerOne.score - 1
+            PlayerOne.ammo_pb = 15
+            PlayerOne.ammo_sh = 0
+            PlayerOne.ammo_mg = 0
+            PlayerOne.x = C.playerStartPositionX
+            PlayerOne.y = C.playerStartPositionY
+            PlayerOne.update(PlayerOne.speed,PlayerOne.angle,all_goodies,all_monsters)
         #draw the stuff to screen
         display.fill((0,0,0))
         all_terrain.draw(display)
@@ -249,6 +238,6 @@ def gameLoop(){
  
         #flip display buffer/display new frame
         pygame.display.flip()
-        clock.tick(60)
+        #clock.tick(60)
 
-        
+gameLoop(1)       

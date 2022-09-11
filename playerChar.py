@@ -31,9 +31,9 @@ class player(pygame.sprite.Sprite):
         self.decel = False
         self.running = False
         self.mapID = 1
-        self.ammo_pb = 100
-        self.ammo_sh = 20
-        self.ammo_mg = 100
+        self.ammo_pb = 15
+        self.ammo_sh = 0
+        self.ammo_mg = 0
         a = math.radians(self.dir)
         pygame.sprite.Sprite.__init__(self)
         PlayerSprite = pygame.Surface([15,15], pygame.SRCALPHA)
@@ -48,8 +48,31 @@ class player(pygame.sprite.Sprite):
 
 
 
-    def update(self,speed,angle):
-        #update after a move
+    def update(self,speed,angle,all_goodies,all_monsters):
+        self.x = self.x
+        self.y = self.y
+        if self.health >= 100:
+            self.health = 100
+        if self.ammo_mg >= 50:
+            self.ammo_mg = 50
+        if self.ammo_sh >= 25:
+            self.ammo_sh = 25
+        if self.ammo_pb >= 15:
+            self.ammo_pb = 15
+        #check for goodie pickup
+        collide = pygame.sprite.spritecollideany(self,all_goodies)
+        if collide:
+            if collide.type == 0:
+                self.health = self.health + 20
+            if collide.type == 1:
+                self.ammo_pb = self.ammo_pb + 30
+            if collide.type == 2:
+                self.ammo_sh = self.ammo_sh + 25
+            if collide.type == 3:
+                self.ammo_mg = self.ammo_mg + 50
+            collide.kill()
+        
+        #update image rotation after a move
         self.image = pygame.transform.rotate(HERO_IMAGE,math.degrees(-angle))
         #print(angle)
         self.original_image = self.image
@@ -100,7 +123,8 @@ class player(pygame.sprite.Sprite):
             self.vel_y = -2
         if self.vel_x < -2:
             self.vel_x = -2
-        return(self.rect)
+        return(self)
+
     def checkHit(self, rect):
         self.collision[0] = rect.collidepoint(self.rect.topleft)
         self.collision[1] = rect.collidepoint(self.rect.topright)
