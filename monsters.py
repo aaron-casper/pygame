@@ -51,7 +51,7 @@ class randomMonster(pygame.sprite.Sprite):
         if collide:
             ai.bumpWall(self,collide)
             self.speed = 0
-        touchPlayer = pygame.sprite.spritecollideany(self,all_players,False)
+        touchPlayer = pygame.sprite.spritecollideany(self,all_players)
         if touchPlayer:
             #print("touched player")
             player.health -= 1
