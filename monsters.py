@@ -42,6 +42,7 @@ class randomMonster(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(self.x,self.y))
         self.collision = [False] * 9
         self.nodeGraph = ai.loadNodeGraph(mapID)
+        self.path = []
         #print(self.nodeGraph)
 
 
@@ -54,8 +55,14 @@ class randomMonster(pygame.sprite.Sprite):
         if touchPlayer:
             #print("touched player")
             player.health -= 1
-        pathToPlayer = ai.findPath(self,player,mapID)
-        #print(pathToPlayer[0])
+        #print(len(self.path))
+        if len(self.path) < 2:
+            self.path = ai.findPath(self,player,self.nodeGraph)
+        
+        #print(self.path)
+        ai.facePlayer(self)
+
+        
         #if len(pathToPlayer) > 1:
            # print(pathToPlayer)
            #ai.faceTarget(self,player,pathToPlayer[1])
@@ -66,18 +73,17 @@ class randomMonster(pygame.sprite.Sprite):
         correction = 1
         if self.x < 1:
             self.x = self.x + correction
-            self.angle = self.angle - 180
-
+            self.angle = self.angle - 90
         if self.y < 1:
             self.y = self.y + correction
-            self.angle = self.angle - 180
+            self.angle = self.angle - 90
         if self.x > C.SCREEN_WIDTH - 15:
             self.x = self.x - correction
-            self.angle = self.angle - 180
+            self.angle = self.angle - 90
 
         if self.y > C.SCREEN_HEIGHT - 15:
             self.y = self.y - correction
-            self.angle = self.angle - 180
+            self.angle = self.angle - 90
 
         #check for various conditions of monster
         if self.bleeding == True:

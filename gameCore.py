@@ -171,8 +171,8 @@ def gameLoop(mapID):
         if len(all_monsters) == 0:
             PlayerOne.score = PlayerOne.score + 1
             #PlayerOne.health = 100
-            #addMonsters(PlayerOne.score * 3, mapID)
-            addMonsters(1, mapID)
+            addMonsters(PlayerOne.score * 3, mapID)
+            #addMonsters(1, mapID)
         #get key input
         keyinput.update(PlayerOne)
 
@@ -184,8 +184,8 @@ def gameLoop(mapID):
         if PlayerOne.mapID != mapID:
             mapID = PlayerOne.mapID
             levelChange(mapID)
-            addMonsters(1, mapID)
-            #addMonsters(PlayerOne.score * 3, mapID)
+            #addMonsters(1, mapID)
+            addMonsters(PlayerOne.score * 3, mapID)
         
         numText = basicfont.render(str(int(PlayerOne.health)) + " hp | BUL: " + str(PlayerOne.ammo_pb) + " | SHL: " + str(PlayerOne.ammo_sh) + " | MG: " + str(PlayerOne.ammo_mg) + " | Weapon: " + str(PlayerOne.weapon) + " | Score: " + str(PlayerOne.score),True,C.WHITE)
         numTextRect = numText.get_rect()

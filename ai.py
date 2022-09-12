@@ -39,12 +39,12 @@ def loadNodeGraph(mapID):
             aiWalls.append(row)
             y += 1
         #print(aiWalls)
-    return(aiWalls)
+    return(aiWalls) #path array or x/y tuples
     
 
     
-def findPath(self,player,mapID):
-    matrix = loadNodeGraph(mapID)
+def findPath(self,player,nodeGraph):
+    matrix = nodeGraph
     #print(len(matrix))
     grid = Grid(matrix = matrix)
     x = int(self.x)
@@ -69,12 +69,17 @@ def findPath(self,player,mapID):
     path, runs = finder.find_path(start,end,grid)
     print(grid.grid_str(path=path,start=start,end=end))
     #print(path)
-    if len(path) > 1:
-        xdiff = path[1][0] - x
-        ydiff = path[1][1] - y
+    return(path)
+
+def facePlayer(self):
+    x = int(self.x) // 25
+    y = int(self.y) // 25
+    if len(self.path) > 1:
+        xdiff = self.path[0][0] - x
+        ydiff = self.path[0][1] - y
         self.angle = math.atan2(ydiff,xdiff)
-        #print("pos: " + str((x,y)) + "targ: " + str(path[1]))
-        path.pop(0)
+        #print("pos: " + str((x,y)) + "targ: " + str(self.path[1]))
+        self.path.pop(0)
     return(self)
     
 
