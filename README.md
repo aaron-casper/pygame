@@ -17,6 +17,7 @@ the map editor modifies maps.db (sqlite3) which contains both the map tile data 
 
 
 Controls in the map editor are:
+-
 WASD to change map
 mousewheel to change tile type (stone, grass, etc)
 mouse to place
@@ -26,7 +27,6 @@ mouse3 (middle-click) to commit the map and nodegraph to database
 If you are replacing existing tiles, you should void them before placing new.
 
 
--
 Obligatory Open-Source MIT licensing blurb:
 -
 Permission is hereby granted, free of charge, to any person obtaining a copy
